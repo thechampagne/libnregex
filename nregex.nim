@@ -13,3 +13,10 @@ proc nre_match(s: cstring, pattern: cstring, m: ptr nre_regex_match_t): c_int {.
     return 1
   else:
     return 0
+
+proc nre_is_match(s: cstring, pattern: cstring): c_int {.exportc.} =
+  if match($s, re($pattern)):
+    return 1
+  else:
+    return 0
+
