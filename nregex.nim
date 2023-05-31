@@ -4,7 +4,7 @@ type
   nre_regex_t = object
   nre_regex_match_t = object
 
-proc nre_regex_compile(s: cstring): ptr nre_regex_t =
+proc nre_regex_compile(s: cstring): ptr nre_regex_t {.exportc.} =
   let r = create Regex
   r[] = re($s)
   return cast[ptr nre_regex_t](r)
