@@ -1,21 +1,29 @@
 import regex
 
 type
+  nre_regex_t = object
   nre_regex_match_t = object
+
+proc nre_regex_compile(s: cstring): ptr nre_regex_t =
+  let r = create Regex
+  r[] = re($s)
+  return cast[ptr nre_regex_t](r)
 
 proc nre_regex_match_init(): ptr nre_regex_match_t {.exportc.} =
   let rm = create RegexMatch
   return cast[ptr nre_regex_match_t](rm)
 
-proc nre_match(s: cstring, pattern: cstring, m: ptr nre_regex_match_t): c_int {.exportc.} =
+proc nre_match(s: cstring, pattern: ptr nre_regex_t, m: ptr nre_regex_match_t): c_int {.exportc.} =
+  let r = cast[ptr Regex](pattern)
   var rm = cast[ptr RegexMatch](m)
-  if match($s, re($pattern), rm[]):
+  if match($s, r[], rm[]):
     return 1
   else:
     return 0
 
-proc nre_is_match(s: cstring, pattern: cstring): c_int {.exportc.} =
-  if match($s, re($pattern)):
+proc nre_is_match(s: cstring, pattern: ptr nre_regex_t): c_int {.exportc.} =
+  let r = cast[ptr Regex](pattern)
+  if match($s, r[]):
     return 1
   else:
     return 0
