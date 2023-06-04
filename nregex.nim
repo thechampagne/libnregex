@@ -28,6 +28,35 @@ proc nre_is_match(s: cstring, pattern: ptr nre_regex_t): c_int {.exportc.} =
   else:
     return 0
 
+proc nre_contains(s: cstring, pattern: ptr nre_regex_t): cint {.exportc.} =
+  let r = cast[ptr Regex](pattern)
+  if contains($s, r[]):
+    return 1
+  else:
+    return 0
+
+proc nre_starts_with(s: cstring, pattern: ptr nre_regex_t, start: csize_t): cint {.exportc.} =
+  let r = cast[ptr Regex](pattern)
+  if startsWith($s, r[], int(start)):
+    return 1
+  else:
+    return 0
+
+proc nre_ends_with(s: cstring, pattern: ptr nre_regex_t): cint {.exportc.} =
+  let r = cast[ptr Regex](pattern)
+  if endsWith($s, r[]):
+    return 1
+  else:
+    return 0
+
+proc nre_find(s: cstring, pattern: ptr nre_regex_t, m: ptr nre_regex_match_t, start: csize_t): cint {.exportc.} =
+  let r = cast[ptr Regex](pattern)
+  var rm = cast[ptr RegexMatch](m)
+  if find($s, r[], rm[], int(start)):
+    return 1
+  else:
+    return 0
+
 
 # TODOs:
 # func group(m: RegexMatch; i: int; text: string): seq[string]
@@ -39,11 +68,7 @@ proc nre_is_match(s: cstring, pattern: ptr nre_regex_t): c_int {.exportc.} =
 # func groupsCount(m: RegexMatch): int
 # func groupNames(m: RegexMatch): seq[string
 # func findAndCaptureAll(s: string; pattern: Regex): seq[string]
-# func contains(s: string; pattern: Regex): bool
-# func find(s: string; pattern: Regex; m: var RegexMatch; start = 0): bool
 # func splitIncl(s: string; sep: Regex): seq[string]
-# func startsWith(s: string; pattern: Regex; start = 0): bool
-# func endsWith(s: string; pattern: Regex): bool
 # func replace(s: string; pattern: Regex; by: string; limit = 0): string
 # iterator group(m: RegexMatch; i: int): Slice[int]
 # iterator group(m: RegexMatch; s: string): Slice[int]
