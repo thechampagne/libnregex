@@ -57,11 +57,11 @@ proc nre_find(s: cstring, pattern: ptr nre_regex_t, m: ptr nre_regex_match_t, st
   else:
     return 0
 
-proc nre_regex_match_groups_count(m: ptr nre_regex_match_t): cint =
+proc nre_regex_match_groups_count(m: ptr nre_regex_match_t): cint {.exportc.} =
   let rm = cast[ptr RegexMatch](m)
   return cint(groupsCount(rm[]))
 
-proc nre_regex_match_group_names(m: ptr nre_regex_match_t): ptr ptr cchar =
+proc nre_regex_match_group_names(m: ptr nre_regex_match_t): ptr ptr cchar {.exportc.} =
   let rm = cast[ptr RegexMatch](m)
   let names = groupNames(rm[])
   if names.len == 0:
@@ -74,7 +74,7 @@ proc nre_regex_match_group_names(m: ptr nre_regex_match_t): ptr ptr cchar =
     cast[ptr UncheckedArray[ptr cchar]](carray)[i] = cstr
   return carray
 
-proc nre_replace(s: cstring, pattern: ptr nre_regex_t, by: cstring, limit: csize_t): ptr cchar =
+proc nre_replace(s: cstring, pattern: ptr nre_regex_t, by: cstring, limit: csize_t): ptr cchar {.exportc.} =
   let r = cast[ptr Regex](pattern)
   let replace = replace($s, r[], $by, int(limit))
   var cstr = cast[ptr cchar](alloc((sizeof cchar) * replace.len + 1))
@@ -82,7 +82,7 @@ proc nre_replace(s: cstring, pattern: ptr nre_regex_t, by: cstring, limit: csize
   cast[ptr UncheckedArray[cchar]](cstr)[replace.len] = '\0'
   return cstr
 
-proc nre_split_incl(s: cstring, sep: ptr nre_regex_t): ptr ptr cchar =
+proc nre_split_incl(s: cstring, sep: ptr nre_regex_t): ptr ptr cchar {.exportc.} =
   let r = cast[ptr Regex](sep)
   let splits = splitIncl($s, r[])
   if splits.len == 0:
