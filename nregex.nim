@@ -9,7 +9,10 @@ type
 
 proc nre_regex_compile(s: cstring): ptr nre_regex_t {.exportc.} =
   let r = create Regex
-  r[] = re($s)
+  r[] = try:
+          re($s)
+        except CatchableError:
+          return nil
   return cast[ptr nre_regex_t](r)
 
 proc nre_regex_is_initialized(re: ptr nre_regex_t): cint {.exportc.} =
@@ -86,7 +89,10 @@ proc nre_regex_match_group_names(m: ptr nre_regex_match_t): ptr ptr cchar {.expo
 
 proc nre_replace(s: cstring, pattern: ptr nre_regex_t, by: cstring, limit: cuint): ptr cchar {.exportc.} =
   let r = cast[ptr Regex](pattern)
-  let replace = replace($s, r[], $by, int(limit))
+  let replace = try:
+                  replace($s, r[], $by, int(limit))
+                except CatchableError:
+                  return nil
   var cstr = cast[ptr cchar](alloc((sizeof cchar) * replace.len + 1))
   copyMem(cstr, cast[pointer](unsafeAddr replace), replace.len)
   cast[ptr UncheckedArray[cchar]](cstr)[replace.len] = '\0'
@@ -172,7 +178,10 @@ proc nre_group_last_capture(m: ptr nre_regex_match_t, i: cuint, text: cstring): 
 
 proc nre_group_first_capture_by_group_name(m: ptr nre_regex_match_t, group_name: cstring, text: cstring): ptr cchar {.exportc.} =
   let rm = cast[ptr RegexMatch](m)
-  let cap = groupFirstCapture(rm[], $group_name, $text)
+  let cap = try:
+              groupFirstCapture(rm[], $group_name, $text)
+            except CatchableError:
+              return nil
   var cstr = cast[ptr cchar](alloc((sizeof cchar) * cap.len + 1))
   copyMem(cstr, cast[pointer](unsafeAddr cap), cap.len)
   cast[ptr UncheckedArray[cchar]](cstr)[cap.len] = '\0'
@@ -180,7 +189,10 @@ proc nre_group_first_capture_by_group_name(m: ptr nre_regex_match_t, group_name:
 
 proc nre_group_last_capture_by_group_name(m: ptr nre_regex_match_t, group_name: cstring, text: cstring): ptr cchar {.exportc.} =
   let rm = cast[ptr RegexMatch](m)
-  let cap = groupLastCapture(rm[], $group_name, $text)
+  let cap = try:
+              groupLastCapture(rm[], $group_name, $text)
+            except CatchableError:
+              return nil
   var cstr = cast[ptr cchar](alloc((sizeof cchar) * cap.len + 1))
   copyMem(cstr, cast[pointer](unsafeAddr cap), cap.len)
   cast[ptr UncheckedArray[cchar]](cstr)[cap.len] = '\0'
@@ -201,7 +213,10 @@ proc nre_group(m: ptr nre_regex_match_t, i: cuint, text: cstring): ptr ptr cchar
 
 proc nre_group_by_group_name(m: ptr nre_regex_match_t, group_name: cstring, text: cstring): ptr ptr cchar {.exportc.} =
   let rm = cast[ptr RegexMatch](m)
-  let cap = group(rm[], $group_name, $text)
+  let cap = try:
+              group(rm[], $group_name, $text)
+            except CatchableError:
+              return nil
   if cap.len == 0:
     return nil
   var carray = cast[ptr ptr cchar](alloc((sizeof(ptr cchar)) * cap.len))
@@ -214,7 +229,10 @@ proc nre_group_by_group_name(m: ptr nre_regex_match_t, group_name: cstring, text
 
 proc nre_group_bounds(m: ptr nre_regex_match_t, i: cuint): ptr nre_slice_t {.exportc.} =
   let rm = cast[ptr RegexMatch](m)
-  let all = group(rm[], int(i))
+  let all = try:
+              group(rm[], int(i))
+            except CatchableError:
+              return nil
   if all.len == 0:
     return nil
   var carray = cast[ptr nre_slice_t](alloc((sizeof(nre_slice_t)) * all.len))
