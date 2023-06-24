@@ -4,8 +4,8 @@ type
   nre_regex_t = object
   nre_regex_match_t = object
   nre_slice_t = object
-    a: cint
-    b: cint
+    a: cuint
+    b: cuint
 
 proc nre_regex_compile(s: cstring): ptr nre_regex_t {.exportc.} =
   let r = create Regex
@@ -150,11 +150,11 @@ proc nre_find_all_bounds(s: cstring, pattern: ptr nre_regex_t, start: cuint): pt
     return nil
   var carray = cast[ptr nre_slice_t](alloc((sizeof(nre_slice_t)) * all.len))
   for i,v in all:
-    var slice = nre_slice_t(a: cint(v.a), b: cint(v.b))
+    var slice = nre_slice_t(a: cuint(v.a), b: cuint(v.b))
     cast[ptr UncheckedArray[nre_slice_t]](carray)[i] = slice
   return carray
 
-proc nre_group_first_capture(m: ptr nre_regex_match_t, i: cint, text: cstring): ptr cchar {.exportc.} =
+proc nre_group_first_capture(m: ptr nre_regex_match_t, i: cuint, text: cstring): ptr cchar {.exportc.} =
   let rm = cast[ptr RegexMatch](m)
   let cap = groupFirstCapture(rm[], int(i), $text)
   var cstr = cast[ptr cchar](alloc((sizeof cchar) * cap.len + 1))
@@ -162,7 +162,7 @@ proc nre_group_first_capture(m: ptr nre_regex_match_t, i: cint, text: cstring): 
   cast[ptr UncheckedArray[cchar]](cstr)[cap.len] = '\0'
   return cstr
 
-proc nre_group_last_capture(m: ptr nre_regex_match_t, i: cint, text: cstring): ptr cchar {.exportc.} =
+proc nre_group_last_capture(m: ptr nre_regex_match_t, i: cuint, text: cstring): ptr cchar {.exportc.} =
   let rm = cast[ptr RegexMatch](m)
   let cap = groupLastCapture(rm[], int(i), $text)
   var cstr = cast[ptr cchar](alloc((sizeof cchar) * cap.len + 1))
@@ -186,7 +186,7 @@ proc nre_group_last_capture_by_group_name(m: ptr nre_regex_match_t, group_name: 
   cast[ptr UncheckedArray[cchar]](cstr)[cap.len] = '\0'
   return cstr
 
-proc nre_group(m: ptr nre_regex_match_t, i: cint, text: cstring): ptr ptr cchar {.exportc.} =
+proc nre_group(m: ptr nre_regex_match_t, i: cuint, text: cstring): ptr ptr cchar {.exportc.} =
   let rm = cast[ptr RegexMatch](m)
   let cap = group(rm[], int(i), $text)
   if cap.len == 0:
@@ -212,14 +212,14 @@ proc nre_group_by_group_name(m: ptr nre_regex_match_t, group_name: cstring, text
     cast[ptr UncheckedArray[ptr cchar]](carray)[i] = cstr
   return carray
 
-proc nre_group_bounds(m: ptr nre_regex_match_t, i: cint): ptr nre_slice_t {.exportc.} =
+proc nre_group_bounds(m: ptr nre_regex_match_t, i: cuint): ptr nre_slice_t {.exportc.} =
   let rm = cast[ptr RegexMatch](m)
   let all = group(rm[], int(i))
   if all.len == 0:
     return nil
   var carray = cast[ptr nre_slice_t](alloc((sizeof(nre_slice_t)) * all.len))
   for i,v in all:
-    var slice = nre_slice_t(a: cint(v.a), b: cint(v.b))
+    var slice = nre_slice_t(a: cuint(v.a), b: cuint(v.b))
     cast[ptr UncheckedArray[nre_slice_t]](carray)[i] = slice
   return carray
 
@@ -230,6 +230,6 @@ proc nre_group_by_group_name_bounds(m: ptr nre_regex_match_t, s: cstring): ptr n
     return nil
   var carray = cast[ptr nre_slice_t](alloc((sizeof(nre_slice_t)) * all.len))
   for i,v in all:
-    var slice = nre_slice_t(a: cint(v.a), b: cint(v.b))
+    var slice = nre_slice_t(a: cuint(v.a), b: cuint(v.b))
     cast[ptr UncheckedArray[nre_slice_t]](carray)[i] = slice
   return carray
