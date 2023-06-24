@@ -12,19 +12,26 @@ proc nre_regex_compile(s: cstring): ptr nre_regex_t {.exportc.} =
   r[] = re($s)
   return cast[ptr nre_regex_t](r)
 
-proc nre_regex_match_init(): ptr nre_regex_match_t {.exportc.} =
-  let rm = create RegexMatch
-  return cast[ptr nre_regex_match_t](rm)
-
-proc nre_match(s: cstring, pattern: ptr nre_regex_t, m: ptr nre_regex_match_t): c_int {.exportc.} =
-  let r = cast[ptr Regex](pattern)
-  var rm = cast[ptr RegexMatch](m)
-  if match($s, r[], rm[]):
+proc nre_regex_is_initialized(re: ptr nre_regex_t): cint {.exportc.} =
+  let r = cast[ptr Regex](re)
+  if isInitialized(r[]):
     return 1
   else:
     return 0
 
-proc nre_is_match(s: cstring, pattern: ptr nre_regex_t): c_int {.exportc.} =
+proc nre_regex_match_init(): ptr nre_regex_match_t {.exportc.} =
+  let rm = create RegexMatch
+  return cast[ptr nre_regex_match_t](rm)
+
+proc nre_match(s: cstring, pattern: ptr nre_regex_t, m: ptr nre_regex_match_t, start: cuint): cint {.exportc.} =
+  let r = cast[ptr Regex](pattern)
+  var rm = cast[ptr RegexMatch](m)
+  if match($s, r[], rm[], int(start)):
+    return 1
+  else:
+    return 0
+
+proc nre_is_match(s: cstring, pattern: ptr nre_regex_t): cint {.exportc.} =
   let r = cast[ptr Regex](pattern)
   if match($s, r[]):
     return 1
