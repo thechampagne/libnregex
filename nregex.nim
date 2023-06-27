@@ -74,7 +74,7 @@ proc nre_regex_match_groups_count(m: ptr nre_regex_match_t): cint {.exportc.} =
   let rm = cast[ptr RegexMatch](m)
   return cint(groupsCount(rm[]))
 
-proc nre_regex_match_group_names(m: ptr nre_regex_match_t): ptr ptr cchar {.exportc.} =
+proc nre_regex_match_group_names(m: ptr nre_regex_match_t, out_len: ptr csize_t): ptr ptr cchar {.exportc.} =
   let rm = cast[ptr RegexMatch](m)
   let names = groupNames(rm[])
   if names.len == 0:
@@ -85,6 +85,7 @@ proc nre_regex_match_group_names(m: ptr nre_regex_match_t): ptr ptr cchar {.expo
     copyMem(cstr, cast[pointer](unsafeAddr v), v.len)
     cast[ptr UncheckedArray[cchar]](cstr)[v.len] = '\0'
     cast[ptr UncheckedArray[ptr cchar]](carray)[i] = cstr
+  out_len[] = csize_t(names.len)
   return carray
 
 proc nre_replace(s: cstring, pattern: ptr nre_regex_t, by: cstring, limit: cuint): ptr cchar {.exportc.} =
@@ -98,7 +99,7 @@ proc nre_replace(s: cstring, pattern: ptr nre_regex_t, by: cstring, limit: cuint
   cast[ptr UncheckedArray[cchar]](cstr)[replace.len] = '\0'
   return cstr
 
-proc nre_split_incl(s: cstring, sep: ptr nre_regex_t): ptr ptr cchar {.exportc.} =
+proc nre_split_incl(s: cstring, sep: ptr nre_regex_t, out_len: ptr csize_t): ptr ptr cchar {.exportc.} =
   let r = cast[ptr Regex](sep)
   let splits = splitIncl($s, r[])
   if splits.len == 0:
@@ -109,9 +110,10 @@ proc nre_split_incl(s: cstring, sep: ptr nre_regex_t): ptr ptr cchar {.exportc.}
     copyMem(cstr, cast[pointer](unsafeAddr v), v.len)
     cast[ptr UncheckedArray[cchar]](cstr)[v.len] = '\0'
     cast[ptr UncheckedArray[ptr cchar]](carray)[i] = cstr
+  out_len[] = csize_t(splits.len)
   return carray
 
-proc nre_find_and_capture_all(s: cstring, pattern: ptr nre_regex_t): ptr ptr cchar {.exportc.} =
+proc nre_find_and_capture_all(s: cstring, pattern: ptr nre_regex_t, out_len: ptr csize_t): ptr ptr cchar {.exportc.} =
   let r = cast[ptr Regex](pattern)
   let capture = findAndCaptureAll($s, r[])
   if capture.len == 0:
@@ -122,9 +124,10 @@ proc nre_find_and_capture_all(s: cstring, pattern: ptr nre_regex_t): ptr ptr cch
     copyMem(cstr, cast[pointer](unsafeAddr v), v.len)
     cast[ptr UncheckedArray[cchar]](cstr)[v.len] = '\0'
     cast[ptr UncheckedArray[ptr cchar]](carray)[i] = cstr
+  out_len[] = csize_t(capture.len)
   return carray
 
-proc nre_find_all(s: cstring, pattern: ptr nre_regex_t, start: cuint): ptr ptr nre_regex_match_t {.exportc.} =
+proc nre_find_all(s: cstring, pattern: ptr nre_regex_t, start: cuint, out_len: ptr csize_t): ptr ptr nre_regex_match_t {.exportc.} =
   let r = cast[ptr Regex](pattern)
   let all = findAll($s, r[], int(start))
   if all.len == 0:
@@ -134,9 +137,10 @@ proc nre_find_all(s: cstring, pattern: ptr nre_regex_t, start: cuint): ptr ptr n
     var match = create RegexMatch
     match[] = v
     cast[ptr UncheckedArray[ptr RegexMatch]](carray)[i] = match
+  out_len[] = csize_t(all.len)
   return cast[ptr ptr nre_regex_match_t](carray)
 
-proc nre_split(s: cstring, sep: ptr nre_regex_t): ptr ptr cchar {.exportc.} =
+proc nre_split(s: cstring, sep: ptr nre_regex_t, out_len: ptr csize_t): ptr ptr cchar {.exportc.} =
   let r = cast[ptr Regex](sep)
   let splits = split($s, r[])
   if splits.len == 0:
@@ -147,9 +151,10 @@ proc nre_split(s: cstring, sep: ptr nre_regex_t): ptr ptr cchar {.exportc.} =
     copyMem(cstr, cast[pointer](unsafeAddr v), v.len)
     cast[ptr UncheckedArray[cchar]](cstr)[v.len] = '\0'
     cast[ptr UncheckedArray[ptr cchar]](carray)[i] = cstr
+  out_len[] = csize_t(splits.len)
   return carray
 
-proc nre_find_all_bounds(s: cstring, pattern: ptr nre_regex_t, start: cuint): ptr nre_slice_t {.exportc.} =
+proc nre_find_all_bounds(s: cstring, pattern: ptr nre_regex_t, start: cuint, out_len: ptr csize_t): ptr nre_slice_t {.exportc.} =
   let r = cast[ptr Regex](pattern)
   let all = findAllBounds($s, r[], int(start))
   if all.len == 0:
@@ -158,6 +163,7 @@ proc nre_find_all_bounds(s: cstring, pattern: ptr nre_regex_t, start: cuint): pt
   for i,v in all:
     var slice = nre_slice_t(a: cuint(v.a), b: cuint(v.b))
     cast[ptr UncheckedArray[nre_slice_t]](carray)[i] = slice
+  out_len[] = csize_t(all.len)
   return carray
 
 proc nre_group_first_capture(m: ptr nre_regex_match_t, i: cuint, text: cstring): ptr cchar {.exportc.} =
@@ -198,7 +204,7 @@ proc nre_group_last_capture_by_group_name(m: ptr nre_regex_match_t, group_name: 
   cast[ptr UncheckedArray[cchar]](cstr)[cap.len] = '\0'
   return cstr
 
-proc nre_group(m: ptr nre_regex_match_t, i: cuint, text: cstring): ptr ptr cchar {.exportc.} =
+proc nre_group(m: ptr nre_regex_match_t, i: cuint, text: cstring, out_len: ptr csize_t): ptr ptr cchar {.exportc.} =
   let rm = cast[ptr RegexMatch](m)
   let cap = group(rm[], int(i), $text)
   if cap.len == 0:
@@ -209,9 +215,10 @@ proc nre_group(m: ptr nre_regex_match_t, i: cuint, text: cstring): ptr ptr cchar
     copyMem(cstr, cast[pointer](unsafeAddr v), v.len)
     cast[ptr UncheckedArray[cchar]](cstr)[v.len] = '\0'
     cast[ptr UncheckedArray[ptr cchar]](carray)[i] = cstr
+  out_len[] = csize_t(cap.len)
   return carray
 
-proc nre_group_by_group_name(m: ptr nre_regex_match_t, group_name: cstring, text: cstring): ptr ptr cchar {.exportc.} =
+proc nre_group_by_group_name(m: ptr nre_regex_match_t, group_name: cstring, text: cstring, out_len: ptr csize_t): ptr ptr cchar {.exportc.} =
   let rm = cast[ptr RegexMatch](m)
   let cap = try:
               group(rm[], $group_name, $text)
@@ -225,9 +232,10 @@ proc nre_group_by_group_name(m: ptr nre_regex_match_t, group_name: cstring, text
     copyMem(cstr, cast[pointer](unsafeAddr v), v.len)
     cast[ptr UncheckedArray[cchar]](cstr)[v.len] = '\0'
     cast[ptr UncheckedArray[ptr cchar]](carray)[i] = cstr
+  out_len[] = csize_t(cap.len)
   return carray
 
-proc nre_group_bounds(m: ptr nre_regex_match_t, i: cuint): ptr nre_slice_t {.exportc.} =
+proc nre_group_bounds(m: ptr nre_regex_match_t, i: cuint, out_len: ptr csize_t): ptr nre_slice_t {.exportc.} =
   let rm = cast[ptr RegexMatch](m)
   let all = try:
               group(rm[], int(i))
@@ -239,9 +247,10 @@ proc nre_group_bounds(m: ptr nre_regex_match_t, i: cuint): ptr nre_slice_t {.exp
   for i,v in all:
     var slice = nre_slice_t(a: cuint(v.a), b: cuint(v.b))
     cast[ptr UncheckedArray[nre_slice_t]](carray)[i] = slice
+  out_len[] = csize_t(all.len)
   return carray
 
-proc nre_group_by_group_name_bounds(m: ptr nre_regex_match_t, s: cstring): ptr nre_slice_t {.exportc.} =
+proc nre_group_by_group_name_bounds(m: ptr nre_regex_match_t, s: cstring, out_len: ptr csize_t): ptr nre_slice_t {.exportc.} =
   let rm = cast[ptr RegexMatch](m)
   let all = group(rm[], $s)
   if all.len == 0:
@@ -250,4 +259,5 @@ proc nre_group_by_group_name_bounds(m: ptr nre_regex_match_t, s: cstring): ptr n
   for i,v in all:
     var slice = nre_slice_t(a: cuint(v.a), b: cuint(v.b))
     cast[ptr UncheckedArray[nre_slice_t]](carray)[i] = slice
+  out_len[] = csize_t(all.len)
   return carray
