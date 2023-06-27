@@ -261,3 +261,11 @@ proc nre_group_by_group_name_bounds(m: ptr nre_regex_match_t, s: cstring, out_le
     cast[ptr UncheckedArray[nre_slice_t]](carray)[i] = slice
   out_len[] = csize_t(all.len)
   return carray
+
+proc nre_regex_destroy(re: ptr nre_regex_t) {.exportc.} =
+  if re != nil:
+    dealloc cast[ptr Regex](re)
+
+proc nre_regex_match_destroy(m: ptr nre_regex_match_t) {.exportc.} =
+  if m != nil:
+    dealloc cast[ptr RegexMatch](m)
