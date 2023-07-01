@@ -1,5 +1,8 @@
 import regex
 
+proc malloc(_: csize_t): pointer {.importc.}
+proc free(_: pointer) {.importc.}
+
 type
   nre_regex_t = object
   nre_regex_match_t = object
@@ -8,7 +11,7 @@ type
     b: cuint
 
 proc nre_regex_compile(s: cstring): ptr nre_regex_t {.exportc.} =
-  let r = create Regex
+  let r = cast[ptr Regex](malloc(csize_t(sizeof Regex)))
   r[] = try:
           re($s)
         except CatchableError:
@@ -23,7 +26,7 @@ proc nre_regex_is_initialized(re: ptr nre_regex_t): cint {.exportc.} =
     return 0
 
 proc nre_regex_match_init(): ptr nre_regex_match_t {.exportc.} =
-  let rm = create RegexMatch
+  let rm = cast[ptr RegexMatch](malloc(csize_t(sizeof RegexMatch)))
   return cast[ptr nre_regex_match_t](rm)
 
 proc nre_match(s: cstring, pattern: ptr nre_regex_t, m: ptr nre_regex_match_t, start: cuint): cint {.exportc.} =
@@ -79,9 +82,9 @@ proc nre_regex_match_group_names(m: ptr nre_regex_match_t, out_len: ptr csize_t)
   let names = groupNames(rm[])
   if names.len == 0:
     return nil
-  var carray = cast[ptr ptr cchar](alloc((sizeof(ptr cchar)) * names.len))
+  var carray = cast[ptr ptr cchar](malloc(csize_t((sizeof(ptr cchar)) * names.len)))
   for i,v in names:
-    var cstr = cast[ptr cchar](alloc((sizeof cchar) * v.len + 1))
+    var cstr = cast[ptr cchar](malloc(csize_t((sizeof cchar) * v.len + 1)))
     copyMem(cstr, cast[pointer](unsafeAddr v), v.len)
     cast[ptr UncheckedArray[cchar]](cstr)[v.len] = '\0'
     cast[ptr UncheckedArray[ptr cchar]](carray)[i] = cstr
@@ -94,7 +97,7 @@ proc nre_replace(s: cstring, pattern: ptr nre_regex_t, by: cstring, limit: cuint
                   replace($s, r[], $by, int(limit))
                 except CatchableError:
                   return nil
-  var cstr = cast[ptr cchar](alloc((sizeof cchar) * replace.len + 1))
+  var cstr = cast[ptr cchar](malloc(csize_t((sizeof cchar) * replace.len + 1)))
   copyMem(cstr, cast[pointer](unsafeAddr replace), replace.len)
   cast[ptr UncheckedArray[cchar]](cstr)[replace.len] = '\0'
   return cstr
@@ -104,9 +107,9 @@ proc nre_split_incl(s: cstring, sep: ptr nre_regex_t, out_len: ptr csize_t): ptr
   let splits = splitIncl($s, r[])
   if splits.len == 0:
     return nil
-  var carray = cast[ptr ptr cchar](alloc((sizeof(ptr cchar)) * splits.len))
+  var carray = cast[ptr ptr cchar](malloc(csize_t((sizeof(ptr cchar)) * splits.len)))
   for i,v in splits:
-    var cstr = cast[ptr cchar](alloc((sizeof cchar) * v.len + 1))
+    var cstr = cast[ptr cchar](malloc(csize_t((sizeof cchar) * v.len + 1)))
     copyMem(cstr, cast[pointer](unsafeAddr v), v.len)
     cast[ptr UncheckedArray[cchar]](cstr)[v.len] = '\0'
     cast[ptr UncheckedArray[ptr cchar]](carray)[i] = cstr
@@ -118,9 +121,9 @@ proc nre_find_and_capture_all(s: cstring, pattern: ptr nre_regex_t, out_len: ptr
   let capture = findAndCaptureAll($s, r[])
   if capture.len == 0:
     return nil
-  var carray = cast[ptr ptr cchar](alloc((sizeof(ptr cchar)) * capture.len))
+  var carray = cast[ptr ptr cchar](malloc(csize_t((sizeof(ptr cchar)) * capture.len)))
   for i,v in capture:
-    var cstr = cast[ptr cchar](alloc((sizeof cchar) * v.len + 1))
+    var cstr = cast[ptr cchar](malloc(csize_t((sizeof cchar) * v.len + 1)))
     copyMem(cstr, cast[pointer](unsafeAddr v), v.len)
     cast[ptr UncheckedArray[cchar]](cstr)[v.len] = '\0'
     cast[ptr UncheckedArray[ptr cchar]](carray)[i] = cstr
@@ -132,9 +135,9 @@ proc nre_find_all(s: cstring, pattern: ptr nre_regex_t, start: cuint, out_len: p
   let all = findAll($s, r[], int(start))
   if all.len == 0:
     return nil
-  var carray = cast[ptr ptr RegexMatch](alloc((sizeof(ptr RegexMatch)) * all.len))
+  var carray = cast[ptr ptr RegexMatch](malloc(csize_t((sizeof(ptr RegexMatch)) * all.len)))
   for i,v in all:
-    var match = create RegexMatch
+    var match = cast[ptr RegexMatch](malloc(csize_t(sizeof RegexMatch)))
     match[] = v
     cast[ptr UncheckedArray[ptr RegexMatch]](carray)[i] = match
   out_len[] = csize_t(all.len)
@@ -145,9 +148,9 @@ proc nre_split(s: cstring, sep: ptr nre_regex_t, out_len: ptr csize_t): ptr ptr 
   let splits = split($s, r[])
   if splits.len == 0:
     return nil
-  var carray = cast[ptr ptr cchar](alloc((sizeof(ptr cchar)) * splits.len))
+  var carray = cast[ptr ptr cchar](malloc(csize_t((sizeof(ptr cchar)) * splits.len)))
   for i,v in splits:
-    var cstr = cast[ptr cchar](alloc((sizeof cchar) * v.len + 1))
+    var cstr = cast[ptr cchar](malloc(csize_t((sizeof cchar) * v.len + 1)))
     copyMem(cstr, cast[pointer](unsafeAddr v), v.len)
     cast[ptr UncheckedArray[cchar]](cstr)[v.len] = '\0'
     cast[ptr UncheckedArray[ptr cchar]](carray)[i] = cstr
@@ -159,7 +162,7 @@ proc nre_find_all_bounds(s: cstring, pattern: ptr nre_regex_t, start: cuint, out
   let all = findAllBounds($s, r[], int(start))
   if all.len == 0:
     return nil
-  var carray = cast[ptr nre_slice_t](alloc((sizeof(nre_slice_t)) * all.len))
+  var carray = cast[ptr nre_slice_t](malloc(csize_t((sizeof(nre_slice_t)) * all.len)))
   for i,v in all:
     var slice = nre_slice_t(a: cuint(v.a), b: cuint(v.b))
     cast[ptr UncheckedArray[nre_slice_t]](carray)[i] = slice
@@ -169,7 +172,7 @@ proc nre_find_all_bounds(s: cstring, pattern: ptr nre_regex_t, start: cuint, out
 proc nre_group_first_capture(m: ptr nre_regex_match_t, i: cuint, text: cstring): ptr cchar {.exportc.} =
   let rm = cast[ptr RegexMatch](m)
   let cap = groupFirstCapture(rm[], int(i), $text)
-  var cstr = cast[ptr cchar](alloc((sizeof cchar) * cap.len + 1))
+  var cstr = cast[ptr cchar](malloc(csize_t((sizeof cchar) * cap.len + 1)))
   copyMem(cstr, cast[pointer](unsafeAddr cap), cap.len)
   cast[ptr UncheckedArray[cchar]](cstr)[cap.len] = '\0'
   return cstr
@@ -177,7 +180,7 @@ proc nre_group_first_capture(m: ptr nre_regex_match_t, i: cuint, text: cstring):
 proc nre_group_last_capture(m: ptr nre_regex_match_t, i: cuint, text: cstring): ptr cchar {.exportc.} =
   let rm = cast[ptr RegexMatch](m)
   let cap = groupLastCapture(rm[], int(i), $text)
-  var cstr = cast[ptr cchar](alloc((sizeof cchar) * cap.len + 1))
+  var cstr = cast[ptr cchar](malloc(csize_t((sizeof cchar) * cap.len + 1)))
   copyMem(cstr, cast[pointer](unsafeAddr cap), cap.len)
   cast[ptr UncheckedArray[cchar]](cstr)[cap.len] = '\0'
   return cstr
@@ -188,7 +191,7 @@ proc nre_group_first_capture_by_group_name(m: ptr nre_regex_match_t, group_name:
               groupFirstCapture(rm[], $group_name, $text)
             except CatchableError:
               return nil
-  var cstr = cast[ptr cchar](alloc((sizeof cchar) * cap.len + 1))
+  var cstr = cast[ptr cchar](malloc(csize_t((sizeof cchar) * cap.len + 1)))
   copyMem(cstr, cast[pointer](unsafeAddr cap), cap.len)
   cast[ptr UncheckedArray[cchar]](cstr)[cap.len] = '\0'
   return cstr
@@ -199,7 +202,7 @@ proc nre_group_last_capture_by_group_name(m: ptr nre_regex_match_t, group_name: 
               groupLastCapture(rm[], $group_name, $text)
             except CatchableError:
               return nil
-  var cstr = cast[ptr cchar](alloc((sizeof cchar) * cap.len + 1))
+  var cstr = cast[ptr cchar](malloc(csize_t((sizeof cchar) * cap.len + 1)))
   copyMem(cstr, cast[pointer](unsafeAddr cap), cap.len)
   cast[ptr UncheckedArray[cchar]](cstr)[cap.len] = '\0'
   return cstr
@@ -209,9 +212,9 @@ proc nre_group(m: ptr nre_regex_match_t, i: cuint, text: cstring, out_len: ptr c
   let cap = group(rm[], int(i), $text)
   if cap.len == 0:
     return nil
-  var carray = cast[ptr ptr cchar](alloc((sizeof(ptr cchar)) * cap.len))
+  var carray = cast[ptr ptr cchar](malloc(csize_t((sizeof(ptr cchar)) * cap.len)))
   for i,v in cap:
-    var cstr = cast[ptr cchar](alloc((sizeof cchar) * v.len + 1))
+    var cstr = cast[ptr cchar](malloc(csize_t((sizeof cchar) * v.len + 1)))
     copyMem(cstr, cast[pointer](unsafeAddr v), v.len)
     cast[ptr UncheckedArray[cchar]](cstr)[v.len] = '\0'
     cast[ptr UncheckedArray[ptr cchar]](carray)[i] = cstr
@@ -226,9 +229,9 @@ proc nre_group_by_group_name(m: ptr nre_regex_match_t, group_name: cstring, text
               return nil
   if cap.len == 0:
     return nil
-  var carray = cast[ptr ptr cchar](alloc((sizeof(ptr cchar)) * cap.len))
+  var carray = cast[ptr ptr cchar](malloc(csize_t((sizeof(ptr cchar)) * cap.len)))
   for i,v in cap:
-    var cstr = cast[ptr cchar](alloc((sizeof cchar) * v.len + 1))
+    var cstr = cast[ptr cchar](malloc(csize_t((sizeof cchar) * v.len + 1)))
     copyMem(cstr, cast[pointer](unsafeAddr v), v.len)
     cast[ptr UncheckedArray[cchar]](cstr)[v.len] = '\0'
     cast[ptr UncheckedArray[ptr cchar]](carray)[i] = cstr
@@ -243,7 +246,7 @@ proc nre_group_bounds(m: ptr nre_regex_match_t, i: cuint, out_len: ptr csize_t):
               return nil
   if all.len == 0:
     return nil
-  var carray = cast[ptr nre_slice_t](alloc((sizeof(nre_slice_t)) * all.len))
+  var carray = cast[ptr nre_slice_t](malloc(csize_t((sizeof(nre_slice_t)) * all.len)))
   for i,v in all:
     var slice = nre_slice_t(a: cuint(v.a), b: cuint(v.b))
     cast[ptr UncheckedArray[nre_slice_t]](carray)[i] = slice
@@ -255,7 +258,7 @@ proc nre_group_by_group_name_bounds(m: ptr nre_regex_match_t, s: cstring, out_le
   let all = group(rm[], $s)
   if all.len == 0:
     return nil
-  var carray = cast[ptr nre_slice_t](alloc((sizeof(nre_slice_t)) * all.len))
+  var carray = cast[ptr nre_slice_t](malloc(csize_t((sizeof(nre_slice_t)) * all.len)))
   for i,v in all:
     var slice = nre_slice_t(a: cuint(v.a), b: cuint(v.b))
     cast[ptr UncheckedArray[nre_slice_t]](carray)[i] = slice
@@ -264,8 +267,8 @@ proc nre_group_by_group_name_bounds(m: ptr nre_regex_match_t, s: cstring, out_le
 
 proc nre_regex_destroy(re: ptr nre_regex_t) {.exportc.} =
   if re != nil:
-    dealloc cast[ptr Regex](re)
+    free(cast[ptr Regex](re))
 
 proc nre_regex_match_destroy(m: ptr nre_regex_match_t) {.exportc.} =
   if m != nil:
-    dealloc cast[ptr RegexMatch](m)
+    free(cast[ptr RegexMatch](m))
