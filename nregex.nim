@@ -2,6 +2,7 @@ import regex
 
 proc malloc(_: csize_t): pointer {.importc.}
 proc free(_: pointer) {.importc.}
+proc nregexNimMain() {.importc.}
 
 type
   nre_regex_t = object
@@ -9,6 +10,9 @@ type
   nre_slice_t = object
     a: cuint
     b: cuint
+
+proc nregex_init() {.exportc.} =
+  nregexNimMain()
 
 proc nre_regex_compile(s: cstring): ptr nre_regex_t {.exportc.} =
   let r = cast[ptr Regex](malloc(csize_t(sizeof Regex)))

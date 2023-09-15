@@ -16,6 +16,8 @@ typedef struct nre_slice_t
 extern "C" {
 #endif
 
+extern void nregex_init(void);
+
 extern nre_regex_t* nre_regex_compile(const char* s);
 
 extern int nre_regex_is_initialized(const nre_regex_t* re);
