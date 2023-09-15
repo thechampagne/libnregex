@@ -16,11 +16,12 @@ cd libnregex
 ```
 #### 3. Install dependencies
 ```
-make install-deps
+nimble installdeps
 ```
 #### 4. Build the project
-```
-make
+```sh
+nimble static  # Build a static library
+nimble shared  # Build a shared library
 ```
 
 ### References
