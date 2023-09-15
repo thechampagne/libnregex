@@ -15,4 +15,4 @@ clean:
 
 .PHONY: install-deps
 install-deps:
-	nimble install regex
+	nimble install regex@0.20.2

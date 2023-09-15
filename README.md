@@ -24,7 +24,7 @@ make
 ```
 
 ### References
- - [nim-regex](https://github.com/nitely/nim-regex)
+ - [nim-regex](https://github.com/nitely/nim-regex/tree/v0.20.2) - **0.20.2**
 
 ### License
 
